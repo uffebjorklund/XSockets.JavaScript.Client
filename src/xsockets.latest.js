@@ -1,6 +1,6 @@
 /**
- * Client-side controller(s) for full duplex communication with the server-controller(s)
- */
+* Client-side controller(s) for full duplex communication with the server-controller(s)
+*/
 var controller = (function () {
     /**
      * Ctor for client side controller
@@ -297,11 +297,11 @@ var message = (function () {
     return message;
 }());
 /**
- * Static info about the xsockets client, such as events and version.
- */
+* Static info about the xsockets client, such as events and version.
+*/
 var xsockets;
 (function (xsockets) {
-    xsockets.version = '6.0.0-beta1';
+    xsockets.version = '6.0.0-beta3';
     var events = (function () {
         function events() {
         }
@@ -363,8 +363,8 @@ var promise = (function () {
     return promise;
 }());
 /**
- * XSockets.NET - WebSocket-client transport
- */
+* XSockets.NET - WebSocket-client transport
+*/
 var xsocketsClient = (function () {
     /**
      * Ctor for transport, example new xsocketsClient('ws://somehost.com:80',['foo', 'bar']);
@@ -461,17 +461,18 @@ var xsocketsClient = (function () {
                 // TextMessage                
                 var d = JSON.parse(event.data);
                 // TODO: if owin sends a fake ping respond with fake pong. Microsoft did not implement ping/pong following RFC6455
-                if (d.T == xsockets.events.authfailed) {
-                    _this.onAuthenticationFailed(d.D);
+                var m = new message(d.C, d.T, d.D, undefined);
+                if (m.T == xsockets.events.authfailed) {
+                    _this.onAuthenticationFailed(m.D);
                     _this.close(false);
                     return;
                 }
-                var c = _this.controller(d.C, false);
+                var c = _this.controller(m.C, false);
                 if (c == undefined) {
                     _this.onMessage(d);
                 }
                 else {
-                    c.dispatchEvent(d);
+                    c.dispatchEvent(m);
                 }
             }
             else if (typeof (event.data) === "object") {
