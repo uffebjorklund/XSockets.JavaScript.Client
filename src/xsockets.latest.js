@@ -1,6 +1,6 @@
 /**
-* Client-side controller(s) for full duplex communication with the server-controller(s)
-*/
+ * Client-side controller(s) for full duplex communication with the server-controller(s)
+ */
 var controller = (function () {
     /**
      * Ctor for client side controller
@@ -200,6 +200,17 @@ var controller = (function () {
         topic = topic.toLowerCase();
         this.invoke(topic, data);
     };
+    controller.prototype.setProperty = function (name, value) {
+        this.invoke('set_' + name, value);
+    };
+    controller.prototype.getProperty = function (name, callback) {
+        var that = this;
+        this.on('get_' + name, function (d) {
+            that.off('get_' + name);
+            callback(JSON.parse(d));
+        });
+        this.invoke('get_' + name, undefined);
+    };
     return controller;
 }());
 var messageType;
@@ -297,11 +308,11 @@ var message = (function () {
     return message;
 }());
 /**
-* Static info about the xsockets client, such as events and version.
-*/
+ * Static info about the xsockets client, such as events and version.
+ */
 var xsockets;
 (function (xsockets) {
-    xsockets.version = '6.0.0-beta3';
+    xsockets.version = '6.0.0-rc1';
     var events = (function () {
         function events() {
         }
@@ -363,8 +374,8 @@ var promise = (function () {
     return promise;
 }());
 /**
-* XSockets.NET - WebSocket-client transport
-*/
+ * XSockets.NET - WebSocket-client transport
+ */
 var xsocketsClient = (function () {
     /**
      * Ctor for transport, example new xsocketsClient('ws://somehost.com:80',['foo', 'bar']);

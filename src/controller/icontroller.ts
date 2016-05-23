@@ -8,8 +8,10 @@
     onOpen(connInfo:any);
     onClose();
     onMessage(ev:any);
+
     // RPC
-    on(topic: string, callback: (data)=>any);
+    on(topic: string, callback: (data) => any);
+    off(topic: string);
     invoke(topic: string, data: string | number | boolean | JSON);
 
     // BINARY
@@ -21,4 +23,8 @@
     unsubscribe(topic: string);
 
     dispatchEvent(message: message);
+
+    // Getters/Setters for server-side properties/enums
+    setProperty(name: string, value: string | number | boolean | JSON);
+    getProperty(name: string, callback: (value: JSON) => any);    
 }

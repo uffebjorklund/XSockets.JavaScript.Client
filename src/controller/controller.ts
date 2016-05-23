@@ -84,12 +84,10 @@ class controller implements icontroller {
         //Check pub/sub and rpc
         var cb = this._subscriptions[message.T];
         if (cb !== undefined) {   
-            if (message.messageType == messageType.text) {
-                
+            if (message.messageType == messageType.text) {                
                 cb(JSON.parse(message.D));
             }
-            else {
-                
+            else {                
                 cb({binary: message.B, metadata:JSON.parse(message.D)});
             }
             return true;
@@ -123,7 +121,6 @@ class controller implements icontroller {
             this._transport.disposeController(this);
         }
     }
-
     
     /**
      * Add a callback that will fire for a specific topic
@@ -139,6 +136,7 @@ class controller implements icontroller {
             delete this._subscriptions[topic];
         }
     }
+
     /**
      * Removes a callback for a specific topic
      * @param topic - the topic to remove the callback for
@@ -220,5 +218,18 @@ class controller implements icontroller {
     public publish(topic: string, data: string | number | boolean | JSON) {
         topic = topic.toLowerCase();
         this.invoke(topic, data);
+    }
+
+    public setProperty(name: string, value: string | number | boolean | JSON) {
+        this.invoke('set_' + name, value);
+    }
+
+    public getProperty(name: string, callback: (value: JSON) => any) {
+        var that = this;
+        this.on('get_' + name, function (d) {
+            that.off('get_' + name);
+            callback(JSON.parse(d));
+        });
+        this.invoke('get_' + name,undefined);
     }
 }
