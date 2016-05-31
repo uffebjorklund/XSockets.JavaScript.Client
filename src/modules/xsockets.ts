@@ -2,7 +2,10 @@
  * Static info about the xsockets client, such as events and version.
  */
 module xsockets {
-    export var version = '6.0.0-rc1';
+    export var version = '6.0.0-rc2';
+    export class test{
+        public demo() { console.log('foo'); }
+    }
     export class events {
         static authfailed: string = '0';
         static init: string = '1';
@@ -30,5 +33,13 @@ module xsockets {
             for (b = a = ''; a++ < 36; b += a * 51 & 52 ? (a ^ 15 ? 8 ^ Math.random() * (a ^ 20 ? 16 : 4) : 4).toString(16) : '-');
             return b;
         }
-    } 
+        static isJson(str) {
+            try {
+                JSON.parse(str);
+            } catch (e) {
+                return false;
+            }
+            return true;
+        }
+    }
 }

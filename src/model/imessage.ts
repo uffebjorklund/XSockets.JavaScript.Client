@@ -1,19 +1,21 @@
-﻿enum messageType {
-    text, binary
-}
-interface imessage {
-    C: string;
-    T: string | number;
-    D: string;
-    Q: number;
-    I: number;
-    R: boolean;
-    B: ArrayBuffer;
+﻿module xsockets {
+    export enum messageType {
+        text, binary
+    }
+    export interface imessage {
+        C: string;
+        T: string | number;
+        D: string;
+        Q: number;
+        I: number;
+        R: boolean;
+        B: ArrayBuffer;
 
-    messageType: messageType;
+        messageType: messageType;
 
-    createBuffer();
-    extractMessage();
+        createBuffer();
+        extractMessage();
 
-    toString();
+        toString();
+    }
 }
