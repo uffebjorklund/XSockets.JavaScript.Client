@@ -1,9 +1,9 @@
 XSockets - JavaScript Client (TypeScript)
 =========
 
-We are rewriting the JavaScript client for XSockets in TypeScript. Currently in beta1 
+We have replaced the old JavaScript client with a TypeScript client. 
 
 ### Install
 
-    Install-Package XSockets.JsApi -pre
+    Install-Package XSockets.JsApi
 
