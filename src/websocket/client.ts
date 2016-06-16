@@ -20,8 +20,8 @@ module xsockets {
          */
         constructor(server: string, controllers: string[] = []) {
             this._parameters = {};
-            //this._parameters = new Array<any>();
             this._persistentId = localStorage.getItem(server);
+            
             this._server = server;
             this.subprotocol = "XSocketsNET";
             this._controllers = new Array<xsockets.controller>();
@@ -45,11 +45,7 @@ module xsockets {
             this._autoReconnect = enabled;
             this._autoReconnectTimeout = timeout;
         }
-
-        //public setCleanSession(value: boolean) {
-
-        //}
-
+        
         /**
          * Set the parameters that you want to pass in with the connection.
          * Do this before calling open
@@ -71,12 +67,15 @@ module xsockets {
         /**
          * Opens the transport (socket) and setup all basic events (open, close, onmessage, onerror)
          */
-        open() {
+        public open() {
             var that = this;
+
+            if (this._persistentId)
+                this._parameters["persistentid"] = this._persistentId;
+
             if (this.socket !== undefined && this.socket.readyState == WebSocket.OPEN)
                 return;
-            // TODO: build parameters to pass in...        
-            this._parameters["persistentid"] = this._persistentId;
+            
             this.socket = new WebSocket(this._server + this.querystring(), [this.subprotocol]);
             this.socket.binaryType = "arraybuffer";
             this.socket.onopen = (event: Event) => {
@@ -108,10 +107,16 @@ module xsockets {
                     // TODO: if owin sends a fake ping respond with fake pong. Microsoft did not implement ping/pong following RFC6455
 
                     var m = new message(d.C, d.T, d.D, undefined);
-                    //console.log(d.D);
-                    //m.D = JSON.parse(d.D);
-                    //console.log(m.D);
-                    if (m.T == xsockets.events.authfailed) {
+
+                    if (m.T === xsockets.events.open) {
+                        this.setPersistentId(JSON.parse(m.D).PI);
+                    }
+                    if (m.T === xsockets.events.error) {
+                        this.onError(d);
+                        return;
+                    }
+
+                    if (m.T === xsockets.events.authfailed) {
                         this.onAuthenticationFailed(m.D);
                         this.close(false);
                         return;
@@ -148,7 +153,7 @@ module xsockets {
          * Close the transport (socket)
          * @param autoReconnect - if true the transport will try to reconnect, default = false
          */
-        close(autoReconnect: boolean = false) {
+        public close(autoReconnect: boolean = false) {
             this._autoReconnect = autoReconnect;
 
             if (this.socket != undefined)
@@ -206,6 +211,7 @@ module xsockets {
                 str += key + '=' + encodeURIComponent(this._parameters[key]) + '&';
             }
             str = str.slice(0, str.length - 1);
+            
             return str;
         }
     }

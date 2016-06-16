@@ -2,10 +2,8 @@
  * Static info about the xsockets client, such as events and version.
  */
 module xsockets {
-    export var version = '6.0.0-rc2';
-    export class test{
-        public demo() { console.log('foo'); }
-    }
+    export var version = '6.0.0-pre';
+       
     export class events {
         static authfailed: string = '0';
         static init: string = '1';

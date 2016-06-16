@@ -1,6 +1,6 @@
 /**
-* Client-side controller(s) for full duplex communication with the server-controller(s)
-*/
+ * Client-side controller(s) for full duplex communication with the server-controller(s)
+ */
 var xsockets;
 (function (xsockets) {
     var controller = (function () {
@@ -292,7 +292,6 @@ var xsockets;
         };
         message.prototype.parse = function (text, binary) {
             var data = JSON.parse(text);
-            console.log('!!!' + data);
             return new message(data.C, data.T, data.D || JSON.stringify({}), binary);
         };
         ;
@@ -329,18 +328,11 @@ var xsockets;
     xsockets.message = message;
 })(xsockets || (xsockets = {}));
 /**
-* Static info about the xsockets client, such as events and version.
-*/
+ * Static info about the xsockets client, such as events and version.
+ */
 var xsockets;
 (function (xsockets) {
-    xsockets.version = '6.0.0-rc2';
-    var test = (function () {
-        function test() {
-        }
-        test.prototype.demo = function () { console.log('foo'); };
-        return test;
-    }());
-    xsockets.test = test;
+    xsockets.version = '6.0.0-pre';
     var events = (function () {
         function events() {
         }
@@ -415,8 +407,8 @@ var xsockets;
     xsockets.promise = promise;
 })(xsockets || (xsockets = {}));
 /**
-* XSockets.NET - WebSocket-client transport
-*/
+ * XSockets.NET - WebSocket-client transport
+ */
 var xsockets;
 (function (xsockets) {
     var client = (function () {
@@ -436,7 +428,6 @@ var xsockets;
             this.onMessage = function (event) { };
             this.onError = function (event) { };
             this._parameters = {};
-            //this._parameters = new Array<any>();
             this._persistentId = localStorage.getItem(server);
             this._server = server;
             this.subprotocol = "XSocketsNET";
@@ -456,8 +447,6 @@ var xsockets;
             this._autoReconnect = enabled;
             this._autoReconnectTimeout = timeout;
         };
-        //public setCleanSession(value: boolean) {
-        //}
         /**
          * Set the parameters that you want to pass in with the connection.
          * Do this before calling open
@@ -480,10 +469,10 @@ var xsockets;
         client.prototype.open = function () {
             var _this = this;
             var that = this;
+            if (this._persistentId)
+                this._parameters["persistentid"] = this._persistentId;
             if (this.socket !== undefined && this.socket.readyState == WebSocket.OPEN)
                 return;
-            // TODO: build parameters to pass in...        
-            this._parameters["persistentid"] = this._persistentId;
             this.socket = new WebSocket(this._server + this.querystring(), [this.subprotocol]);
             this.socket.binaryType = "arraybuffer";
             this.socket.onopen = function (event) {
@@ -516,10 +505,14 @@ var xsockets;
                     var d = JSON.parse(event.data);
                     // TODO: if owin sends a fake ping respond with fake pong. Microsoft did not implement ping/pong following RFC6455
                     var m = new xsockets.message(d.C, d.T, d.D, undefined);
-                    //console.log(d.D);
-                    //m.D = JSON.parse(d.D);
-                    //console.log(m.D);
-                    if (m.T == xsockets.events.authfailed) {
+                    if (m.T === xsockets.events.open) {
+                        _this.setPersistentId(JSON.parse(m.D).PI);
+                    }
+                    if (m.T === xsockets.events.error) {
+                        _this.onError(d);
+                        return;
+                    }
+                    if (m.T === xsockets.events.authfailed) {
                         _this.onAuthenticationFailed(m.D);
                         _this.close(false);
                         return;

@@ -1,26 +1,6 @@
-declare module xsockets {
-    interface icontroller {
-        name: string;
-        open(): any;
-        close(dispose: boolean): any;
-        onOpen(connInfo: any): any;
-        onClose(): any;
-        onMessage(ev: any): any;
-        on(topic: string, callback: (data) => any): any;
-        off(topic: string): any;
-        invoke(topic: string, data: string | number | boolean | JSON): any;
-        invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data: any): any;
-        subscribe(topic: string, callback: (data) => any): any;
-        publish(topic: string, data: string | number | boolean | JSON): any;
-        unsubscribe(topic: string): any;
-        dispatchEvent(message: message): any;
-        setProperty(name: string, value: string | number | boolean | JSON): any;
-        getProperty(name: string, callback: (value: JSON) => any): any;
-    }
-}
 /**
-* Client-side controller(s) for full duplex communication with the server-controller(s)
-*/
+ * Client-side controller(s) for full duplex communication with the server-controller(s)
+ */
 declare module xsockets {
     class controller implements icontroller {
         name: string;
@@ -123,6 +103,26 @@ declare module xsockets {
     }
 }
 declare module xsockets {
+    interface icontroller {
+        name: string;
+        open(): any;
+        close(dispose: boolean): any;
+        onOpen(connInfo: any): any;
+        onClose(): any;
+        onMessage(ev: any): any;
+        on(topic: string, callback: (data) => any): any;
+        off(topic: string): any;
+        invoke(topic: string, data: string | number | boolean | JSON): any;
+        invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data: any): any;
+        subscribe(topic: string, callback: (data) => any): any;
+        publish(topic: string, data: string | number | boolean | JSON): any;
+        unsubscribe(topic: string): any;
+        dispatchEvent(message: message): any;
+        setProperty(name: string, value: string | number | boolean | JSON): any;
+        getProperty(name: string, callback: (value: JSON) => any): any;
+    }
+}
+declare module xsockets {
     enum messageType {
         text = 0,
         binary = 1,
@@ -178,13 +178,10 @@ declare module xsockets {
     }
 }
 /**
-* Static info about the xsockets client, such as events and version.
-*/
+ * Static info about the xsockets client, such as events and version.
+ */
 declare module xsockets {
     var version: string;
-    class test {
-        demo(): void;
-    }
     class events {
         static authfailed: string;
         static init: string;
@@ -211,6 +208,11 @@ declare module xsockets {
     }
 }
 declare module xsockets {
+    interface isubscriptions {
+        [topic: string]: (d) => any;
+    }
+}
+declare module xsockets {
     class promise {
         private _controller;
         private _name;
@@ -227,32 +229,9 @@ declare module xsockets {
         constructor(controller: xsockets.controller, name: string);
     }
 }
-declare module xsockets {
-    interface isubscriptions {
-        [topic: string]: (d) => any;
-    }
-}
-declare module xsockets {
-    interface itransport {
-        socket: WebSocket;
-        open(): any;
-        close(autoReconnect: boolean): any;
-        autoReconnect(enabled: boolean, timeout: number): any;
-        setPersistentId(guid: string): any;
-        setParameters(params: any): any;
-        onOpen(ev: Event): any;
-        onAuthenticationFailed(ev: Event): any;
-        onClose(ev: CloseEvent): any;
-        onError(ev: ErrorEvent): any;
-        onMessage(ev: MessageEvent): any;
-        controller(name: string, createNewInstanceIfMissing: boolean): any;
-        disposeController(controller: controller): any;
-        isConnected(): any;
-    }
-}
 /**
-* XSockets.NET - WebSocket-client transport
-*/
+ * XSockets.NET - WebSocket-client transport
+ */
 declare module xsockets {
     class client implements itransport {
         private _server;
@@ -318,5 +297,23 @@ declare module xsockets {
          */
         isConnected(): boolean;
         private querystring();
+    }
+}
+declare module xsockets {
+    interface itransport {
+        socket: WebSocket;
+        open(): any;
+        close(autoReconnect: boolean): any;
+        autoReconnect(enabled: boolean, timeout: number): any;
+        setPersistentId(guid: string): any;
+        setParameters(params: any): any;
+        onOpen(ev: Event): any;
+        onAuthenticationFailed(ev: Event): any;
+        onClose(ev: CloseEvent): any;
+        onError(ev: ErrorEvent): any;
+        onMessage(ev: MessageEvent): any;
+        controller(name: string, createNewInstanceIfMissing: boolean): any;
+        disposeController(controller: controller): any;
+        isConnected(): any;
     }
 }

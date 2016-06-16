@@ -70,8 +70,7 @@
         }
 
         private parse(text: string, binary: Uint8Array) {
-            var data = JSON.parse(text);
-            console.log('!!!' + data);
+            var data = JSON.parse(text);            
             return new message(data.C, data.T, data.D || JSON.stringify({}), binary);
         };
 
