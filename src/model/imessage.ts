@@ -13,9 +13,9 @@
 
         messageType: messageType;
 
-        createBuffer();
-        extractMessage();
+        createBuffer(): ArrayBuffer;
+        extractMessage(): imessage;
 
-        toString();
+        toString():string;
     }
 }

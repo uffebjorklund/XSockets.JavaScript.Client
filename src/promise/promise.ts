@@ -1,6 +1,6 @@
 ﻿module xsockets {
     export class promise {
-        private _controller: xsockets.controller;
+        private _controller: controller;
         private _name: string;
 
         /**
@@ -16,7 +16,7 @@
          * @param controller - the controller instance that is communicating 
          * @param name - the name of the method that expects to return a result
          */
-        constructor(controller: xsockets.controller, name: string) {
+        constructor(controller: controller, name: string) {
             this._controller = controller;
             this._name = name;
         }

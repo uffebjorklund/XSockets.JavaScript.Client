@@ -1,6 +1,27 @@
+declare module xsockets {
+    interface icontroller {
+        name: string;
+        open(): void;
+        close(dispose: boolean): void;
+        onOpen(connInfo: JSON): void;
+        onClose(): void;
+        onMessage(ev: any): void;
+        on(topic: string, callback: (data) => any): void;
+        off(topic: string): void;
+        invoke(topic: string, data: string | number | boolean | JSON): promise;
+        invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data: any): icontroller;
+        subscribe(topic: string, callback: (data) => any): void;
+        publish(topic: string, data: string | number | boolean | JSON): promise;
+        unsubscribe(topic: string): void;
+        publishBinary(topic: string, arrayBuffer: ArrayBuffer, data: any): icontroller;
+        dispatchEvent(message: imessage): void;
+        setProperty(name: string, value: string | number | boolean | JSON): void;
+        getProperty(name: string, callback: (value: JSON) => any): void;
+    }
+}
 /**
- * Client-side controller(s) for full duplex communication with the server-controller(s)
- */
+* Client-side controller(s) for full duplex communication with the server-controller(s)
+*/
 declare module xsockets {
     class controller implements icontroller {
         name: string;
@@ -18,7 +39,7 @@ declare module xsockets {
         /**
          * Will be fired when the controller is opened
          */
-        onOpen: (connInfo: any) => void;
+        onOpen: (connInfo: JSON) => void;
         /**
          * Will be fired when the controller is closed
          */
@@ -31,19 +52,19 @@ declare module xsockets {
         /**
          * Dispatches a message to the promise or subscription for the topic.
          * If no promise/subscription is found the onmessage event on the controller will be fired
-         * @param message - the message object received from the server
+         * @param message - the imessage object received from the server
          */
-        dispatchEvent(message: message): void;
+        dispatchEvent(message: imessage): void;
         /**
          * If there is a promise for the topic on the message it wil be fired.
          * Return true if a promise was fired, otherwise false
-         * @param message - the received message
+         * @param message - the received imessage
          */
         private firePromise(message);
         /**
          * If there is a subscription for the topic on the message it wil be fired.
          * Return true if a subscription was fired, otherwise false
-         * @param message - the received message
+         * @param message - the received imessage
          */
         private fireSubscription(message);
         /**
@@ -80,7 +101,14 @@ declare module xsockets {
          * @param arrayBuffer - the binary data to send
          * @param data - metadata such as information about the binary data
          */
-        invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data?: any): this;
+        invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data?: any): icontroller;
+        /**
+         * Send binary data to the XSockets controller
+         * @param topic - topic/method to call
+         * @param arrayBuffer - the binary data to send
+         * @param data - metadata such as information about the binary data
+         */
+        publishBinary(topic: string, arrayBuffer: ArrayBuffer, data?: any): icontroller;
         /**
          * Creates a subscription on the server for the specific topic
          * @param topic - the topic to subscribe to
@@ -97,29 +125,9 @@ declare module xsockets {
          * @param topic - topic for publish message
          * @param data - data to publish
          */
-        publish(topic: string, data: string | number | boolean | JSON): void;
-        setProperty(name: string, value: string | number | boolean | JSON): void;
-        getProperty(name: string, callback: (value: JSON) => any): void;
-    }
-}
-declare module xsockets {
-    interface icontroller {
-        name: string;
-        open(): any;
-        close(dispose: boolean): any;
-        onOpen(connInfo: any): any;
-        onClose(): any;
-        onMessage(ev: any): any;
-        on(topic: string, callback: (data) => any): any;
-        off(topic: string): any;
-        invoke(topic: string, data: string | number | boolean | JSON): any;
-        invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data: any): any;
-        subscribe(topic: string, callback: (data) => any): any;
-        publish(topic: string, data: string | number | boolean | JSON): any;
-        unsubscribe(topic: string): any;
-        dispatchEvent(message: message): any;
-        setProperty(name: string, value: string | number | boolean | JSON): any;
-        getProperty(name: string, callback: (value: JSON) => any): any;
+        publish(topic: string, data: string | number | boolean | JSON): promise;
+        setProperty(name: string, value: string | number | boolean | JSON): promise;
+        getProperty(name: string, callback: (value: JSON) => any): promise;
     }
 }
 declare module xsockets {
@@ -136,9 +144,9 @@ declare module xsockets {
         R: boolean;
         B: ArrayBuffer;
         messageType: messageType;
-        createBuffer(): any;
-        extractMessage(): any;
-        toString(): any;
+        createBuffer(): ArrayBuffer;
+        extractMessage(): imessage;
+        toString(): string;
     }
 }
 declare module xsockets {
@@ -166,7 +174,7 @@ declare module xsockets {
         /**
          * Extract a message from binary data received from the server
          */
-        extractMessage(): message;
+        extractMessage(): imessage;
         private parse(text, binary);
         /**
          * Return the string representation of the imessage
@@ -178,8 +186,8 @@ declare module xsockets {
     }
 }
 /**
- * Static info about the xsockets client, such as events and version.
- */
+* Static info about the xsockets client, such as events and version.
+*/
 declare module xsockets {
     var version: string;
     class events {
@@ -208,11 +216,6 @@ declare module xsockets {
     }
 }
 declare module xsockets {
-    interface isubscriptions {
-        [topic: string]: (d) => any;
-    }
-}
-declare module xsockets {
     class promise {
         private _controller;
         private _name;
@@ -226,12 +229,35 @@ declare module xsockets {
          * @param controller - the controller instance that is communicating
          * @param name - the name of the method that expects to return a result
          */
-        constructor(controller: xsockets.controller, name: string);
+        constructor(controller: controller, name: string);
+    }
+}
+declare module xsockets {
+    interface isubscriptions {
+        [topic: string]: (d) => any;
+    }
+}
+declare module xsockets {
+    interface itransport {
+        socket: WebSocket;
+        open(): void;
+        close(autoReconnect: boolean): void;
+        autoReconnect(enabled: boolean, timeout: number): void;
+        setPersistentId(guid: string): void;
+        setParameters(params: JSON): void;
+        onOpen(ev: Event): void;
+        onAuthenticationFailed(ev: Event): void;
+        onClose(ev: CloseEvent): void;
+        onError(ev: ErrorEvent): void;
+        onMessage(ev: MessageEvent): void;
+        controller(name: string, createNewInstanceIfMissing: boolean): icontroller;
+        disposeController(controller: icontroller): void;
+        isConnected(): boolean;
     }
 }
 /**
- * XSockets.NET - WebSocket-client transport
- */
+* XSockets.NET - WebSocket-client transport
+*/
 declare module xsockets {
     class client implements itransport {
         private _server;
@@ -265,7 +291,7 @@ declare module xsockets {
          * Do this before calling open
          * @param params - parameters to pass in, example: {foo:'bar',baz:123}
          */
-        setParameters(params: any): void;
+        setParameters(params: JSON): void;
         /**
          * Call before calling open
          * @param guid - sets the persistentid for the connection
@@ -285,35 +311,17 @@ declare module xsockets {
          * @param name - the name of the controller to fetch
          * @param createNewInstanceIfMissing - if true a new instance will be created, default = true
          */
-        controller(name: string, createNewInstanceIfMissing?: boolean): any;
+        controller(name: string, createNewInstanceIfMissing?: boolean): icontroller;
         /**
          * Removes a controller from the transport
          * @param controller - controller instance to dispose
          */
-        disposeController(controller: xsockets.controller): void;
+        disposeController(controller: icontroller): void;
         private sendtext(data);
         /**
          * Returns true if the socket is open
          */
         isConnected(): boolean;
         private querystring();
-    }
-}
-declare module xsockets {
-    interface itransport {
-        socket: WebSocket;
-        open(): any;
-        close(autoReconnect: boolean): any;
-        autoReconnect(enabled: boolean, timeout: number): any;
-        setPersistentId(guid: string): any;
-        setParameters(params: any): any;
-        onOpen(ev: Event): any;
-        onAuthenticationFailed(ev: Event): any;
-        onClose(ev: CloseEvent): any;
-        onError(ev: ErrorEvent): any;
-        onMessage(ev: MessageEvent): any;
-        controller(name: string, createNewInstanceIfMissing: boolean): any;
-        disposeController(controller: controller): any;
-        isConnected(): any;
     }
 }

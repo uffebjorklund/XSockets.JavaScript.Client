@@ -5,7 +5,7 @@ module xsockets {
     export class controller implements icontroller {
         public name: string;
         private _transport: itransport;
-        private _isOpen: boolean = false;
+        private _isOpen = false;
         private _controllerId: string;
         private _subscriptions: isubscriptions = {};
         public promises: isubscriptions = {};
@@ -16,40 +16,40 @@ module xsockets {
          * @param _name - the name of the controller
          */
         constructor(itransport: itransport, _name: string) {
-            this._transport = itransport
+            this._transport = itransport;
             this.name = _name;
         }
 
         /**
          * Will be fired when the controller is opened
          */
-        public onOpen: (connInfo: any) => void = function (connInfo) { };
+        public onOpen: (connInfo: JSON) => void = connInfo => { };
         /**
          * Will be fired when the controller is closed
          */
-        public onClose: () => void = function () { };
+        public onClose: () => void = () => { };
         /**
          * Will be fired when there is a message dispatched to the
          * controller and there is no promise/subscription for the topic
          */
-        public onMessage: (d) => void = function () { };
+        public onMessage: (d) => void = () => { };
 
         /**
          * Dispatches a message to the promise or subscription for the topic.
          * If no promise/subscription is found the onmessage event on the controller will be fired
-         * @param message - the message object received from the server
+         * @param message - the imessage object received from the server
          */
-        public dispatchEvent(message: message) {
+        public dispatchEvent(message: imessage): void {
 
             switch (message.T) {
-                case xsockets.events.open:
+                case events.open:
                     this._isOpen = true;
-                    var clientInfo = JSON.parse(message.D);
+                    let clientInfo = JSON.parse(message.D);
                     this._controllerId = clientInfo.CI;
                     this._transport.setPersistentId(clientInfo.PI);
-                    this.onOpen(message.D);
+                    this.onOpen(clientInfo);
                     break;
-                case xsockets.events.close:
+                case events.close:
                     this._isOpen = false;
                     this.onClose();
                     break;
@@ -63,11 +63,11 @@ module xsockets {
         /**
          * If there is a promise for the topic on the message it wil be fired.
          * Return true if a promise was fired, otherwise false
-         * @param message - the received message
+         * @param message - the received imessage
          */
-        private firePromise(message: message) {
+        private firePromise(message: imessage):boolean {
             //Check promises
-            var cb = this.promises[message.T];
+            let cb = this.promises[message.T];
             if (cb !== undefined) {
                 if (message.messageType === messageType.text) {
                     cb(JSON.parse(message.D));
@@ -75,7 +75,7 @@ module xsockets {
                 else {
                     cb(message.D);
                 }
-                delete this.promises[message.T]
+                delete this.promises[message.T];
                 return true;
             }
             return false;
@@ -84,13 +84,13 @@ module xsockets {
         /**
          * If there is a subscription for the topic on the message it wil be fired.
          * Return true if a subscription was fired, otherwise false
-         * @param message - the received message
+         * @param message - the received imessage
          */
-        private fireSubscription(message: message) {
+        private fireSubscription(message: imessage):boolean {
             //Check pub/sub and rpc
-            var cb = this._subscriptions[message.T];
+            let cb = this._subscriptions[message.T];
             if (cb !== undefined) {
-                if (message.messageType == messageType.text) {
+                if (message.messageType === messageType.text) {
                     cb(JSON.parse(message.D));
                 }
                 else {
@@ -106,9 +106,9 @@ module xsockets {
          *
          * If the transport/socket is open the controller will communicate to the server to open a instance of the server-side controller
          */
-        public open() {
+        public open(): void {
             if (this._transport.isConnected() && !this._isOpen) {
-                this._transport.socket.send(new message(this.name, xsockets.events.init));
+                this._transport.socket.send(new message(this.name, events.init));
             }
         }
 
@@ -116,11 +116,11 @@ module xsockets {
          * Close the controller both server-side and client-side (opitonal)
          * @param dispose - if true the client-side controller will be disposed
          */
-        public close(dispose: boolean = false) {
+        public close(dispose: boolean = false):void {
             //if socket open... send close message
             if (this._transport.isConnected() && this._isOpen) {
 
-                this._transport.socket.send(new message(this.name, xsockets.events.close));
+                this._transport.socket.send(new message(this.name, events.close));
             }
             this.onClose();
             if (dispose) {
@@ -133,12 +133,12 @@ module xsockets {
          * @param topic - the topic to add a callback for
          * @param callback - the callback function to fire when the topic arrives
          */
-        public on(topic: string, callback: (data) => any) {
+        public on(topic: string, callback: (data) => any): void {
             topic = topic.toLowerCase();
-            if (typeof callback === 'function') {
+            if (typeof callback === "function") {
                 this._subscriptions[topic] = callback;
             }
-            if (typeof callback === 'undefined') {
+            if (typeof callback === "undefined") {
                 delete this._subscriptions[topic];
             }
         }
@@ -147,7 +147,7 @@ module xsockets {
          * Removes a callback for a specific topic
          * @param topic - the topic to remove the callback for
          */
-        public off(topic: string) {
+        public off(topic: string): void {
             topic = topic.toLowerCase();
             delete this._subscriptions[topic];
         }
@@ -157,12 +157,14 @@ module xsockets {
          * @param topic - the method to call
          * @param data - the serializable data to pass into the method
          */
-        public invoke(topic: string, data: string | number | boolean | JSON) {
+        public invoke(topic: string, data: string | number | boolean | JSON):promise {
             topic = topic.toLowerCase();
 
             if (this._transport.isConnected()) {
-                if (data === undefined) data = '';
-                var m = new message(this.name, topic, data);
+                if (data === undefined) {
+                    data = "";
+                }
+                let m = new message(this.name, topic, data);
                 this._transport.socket.send(m);
             }
             return new promise(this, topic);
@@ -174,11 +176,21 @@ module xsockets {
          * @param arrayBuffer - the binary data to send
          * @param data - metadata such as information about the binary data
          */
-        public invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data: any = undefined) {
+        public invokeBinary(topic: string, arrayBuffer: ArrayBuffer, data: any = undefined):icontroller {
             topic = topic.toLowerCase();
-            var bm = new message(this.name, topic, data, arrayBuffer);
+            let bm = new message(this.name, topic, data, arrayBuffer);
             this._transport.socket.send(bm.createBuffer());
             return this;
+        }
+
+        /**
+         * Send binary data to the XSockets controller
+         * @param topic - topic/method to call
+         * @param arrayBuffer - the binary data to send
+         * @param data - metadata such as information about the binary data         
+         */
+        public publishBinary(topic: string, arrayBuffer: ArrayBuffer, data: any = undefined): icontroller {
+            return this.invokeBinary(topic, arrayBuffer, data);
         }
 
         /**
@@ -186,13 +198,13 @@ module xsockets {
          * @param topic - the topic to subscribe to
          * @param callback - the callback to fire when a message with the topic is published
          */
-        public subscribe(topic: string, callback: (data) => any) {
+        public subscribe(topic: string, callback: (data) => any):void {
             topic = topic.toLowerCase();
             this.on(topic, callback);
 
-            if (this._transport.isConnected() && typeof callback === 'function') {
+            if (this._transport.isConnected() && typeof callback === "function") {
 
-                var m = new message(this.name, xsockets.events.subscribe, {
+                let m = new message(this.name, events.subscribe, {
                     T: topic,
                     A: false//cb ? true : false
                 });
@@ -204,11 +216,11 @@ module xsockets {
          * Remove the subscription from the server
          * @param topic - the topic to cancel the subscription for
          */
-        public unsubscribe(topic: string) {
+        public unsubscribe(topic: string):void {
             topic = topic.toLowerCase();
             delete this._subscriptions[topic];
             if (this._transport.isConnected()) {
-                var m = new message(this.name, xsockets.events.unsubscribe, {
+                let m = new message(this.name, events.unsubscribe, {
                     T: topic,
                     A: false
                 });
@@ -221,22 +233,21 @@ module xsockets {
          * @param topic - topic for publish message
          * @param data - data to publish
          */
-        public publish(topic: string, data: string | number | boolean | JSON) {
+        public publish(topic: string, data: string | number | boolean | JSON):promise {
             topic = topic.toLowerCase();
-            this.invoke(topic, data);
+            return this.invoke(topic, data);
         }
 
-        public setProperty(name: string, value: string | number | boolean | JSON) {
-            this.invoke('set_' + name, value);
+        public setProperty(name: string, value: string | number | boolean | JSON):promise {
+           return  this.invoke('set_' + name, value);
         }
 
-        public getProperty(name: string, callback: (value: JSON) => any) {
-            var that = this;
-            this.on('get_' + name, function (d) {
-                that.off('get_' + name);
+        public getProperty(name: string, callback: (value: JSON) => any):promise {
+            this.on('get_' + name, d => {
+                this.off('get_' + name);
                 callback(d);
             });
-            this.invoke('get_' + name, undefined);
+            return this.invoke('get_' + name, undefined);
         }
     }
 }
